@@ -35,8 +35,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.todo.screens.CreateTask.CreateTask
+import com.example.todo.screens.TaskList.TaskList
 import com.example.todo.ui.theme.SurfaceCard
 import com.example.todo.ui.theme.ToDoTheme
+import com.example.todo.ui.theme.primaryDark
 import java.time.LocalDate
 
 class MainActivity : ComponentActivity() {
@@ -57,7 +60,7 @@ data class Event(
     var id: Int,
     var title: String,
     var description: String,
-    var date: LocalDate,
+    var date: LocalDate?,
     var location: String,
     var icon: ImageVector,
     var isCompleted: Boolean
@@ -66,26 +69,27 @@ data class Event(
 enum class Screen {
     TaskList, TaskInfo, CreateTask, TaskCalendar
 }
-
+//public var datedEvents = mutableMapOf<LocalDate, MutableList<Event>>()
+public var datedEvents = mutableMapOf<LocalDate?, MutableList<Event>>()
 public var allEvents = listOf<Event>()
-public var toDoEvents = listOf<Event>(
-    Event(
-        0,
-        "New Task",
-        "Task Description Of DOom because of how long this desccription is",
-        LocalDate.now(),
-        "Nun ur bzn",
-        Icons.Default.Menu,
-        false
-    )
-)
 public var eventsDone = listOf<Event>()
+public var toDoEvents = listOf<Event>(
+//    Event(
+//        0,
+//        "New Task",
+//        "Desciption of the event",
+//        LocalDate.now(),
+//        "Nun ur bzn",
+//        Icons.Default.Menu,
+//        false
+//    )
+)
 
 @Composable
 fun MainUI() {
     var eventsList by remember { mutableStateOf(toDoEvents) }
     var topBarTitle by remember { mutableStateOf("Welcome Back, Jack") }
-    var screen by remember { mutableStateOf(Screen.TaskList) }
+    var screen by remember { mutableStateOf(Screen.CreateTask) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -111,12 +115,16 @@ fun MainUI() {
             Screen.CreateTask -> CreateTask(
                 Modifier
                     .padding(innerPadding)
-                    .padding(top = 20.dp), {
-                toDoEvents += it
-                eventsList = toDoEvents
-                Log.d(TAG, eventsList.toString())
-                screen = Screen.TaskList
-            }, { topBarTitle = it })
+                    .padding(top = 20.dp),
+                {
+                    // Update data
+
+                    AddEvent(it)
+                    // Update UI
+                    eventsList = toDoEvents
+                    screen = Screen.TaskList
+                },
+                { topBarTitle = it })
 
             Screen.TaskCalendar -> TaskCalendar(
                 Modifier.padding(innerPadding), { topBarTitle = it })
@@ -124,51 +132,16 @@ fun MainUI() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TopBar(title: String) {
-    TopAppBar(
-        title = {
-            Text(
-                text = title, fontWeight = FontWeight.Bold
-            )
-        }, colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = SurfaceCard, titleContentColor = Color.Black
-        )
-    )
-}
+fun AddEvent(newEvent: Event) {
+    // Probably gon have to change this,
+    // doesn't seem very efficient
+    allEvents += newEvent
+    toDoEvents = allEvents.filter{event -> !event.isCompleted }
 
-@Composable
-fun BottomBar(taskList: () -> Unit, createTask: () -> Unit, taskCalendar: () -> Unit) {
-    BottomAppBar(
-        containerColor = Color(0xFFB3C5BD),
-        contentPadding = PaddingValues(0.dp),
-        tonalElevation = 0.dp
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(3 / 4f),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                IconButton(onClick = { taskList() }) {
-                    Icon(
-                        imageVector = Icons.Default.Menu, contentDescription = "All active Tasks"
-                    )
-                }
-                IconButton(onClick = { createTask() }) {
-                    Icon(
-                        imageVector = Icons.Default.Edit, contentDescription = "Create a new Task"
-                    )
-                }
-                IconButton(onClick = { taskCalendar() }) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarMonth,
-                        contentDescription = "View all Tasks in a Calendar"
-                    )
-                }
-            }
-        }
+
+    if (newEvent.date != null) {
+        val date = newEvent.date
+        datedEvents.getOrPut(date) { mutableListOf() }.add(0, newEvent)
+        Log.d(TAG, datedEvents.toString())
     }
 }
