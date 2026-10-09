@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
@@ -37,7 +37,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.todo.screens.Event
+import com.example.todo.data.TaskViewModel
 import com.example.todo.ui.theme.CanvasBackground
 import com.example.todo.ui.theme.DarkViolet
 import com.example.todo.ui.theme.RoyalGold
@@ -48,18 +48,23 @@ import com.example.todo.ui.theme.TextBlack
 import com.example.todo.ui.theme.VibrantCoral
 import com.example.todo.ui.theme.primaryDark
 import com.example.todo.ui.theme.primaryLight
+import kotlinx.coroutines.flow.count
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
+import androidx.compose.runtime.collectAsState
+import com.example.todo.data.Task
 
 @Composable
 fun TaskList(
+    taskViewModel: TaskViewModel,
     modifier: Modifier,
-    eventsList: List<Event>,
     topBarTitle: (String) -> Unit,
     moreInfo: (Int) -> Unit
 ) {
+    var tasksList by remember { mutableStateOf<List<Task>>(emptyList()) }
+
 
     topBarTitle("Welcome Back, Jack")
 
@@ -69,14 +74,29 @@ fun TaskList(
             .background(SurfaceCard),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        QuickAccessCalendar(Modifier.weight(1f))
-        MainToDoList(eventsList, Modifier.weight(3f), { moreInfo(it) })
+        QuickAccessCalendar(
+            taskViewModel,
+            { tasksList = it },
+            Modifier.weight(1f)
+        )
+        MainToDoList(
+            taskViewModel,
+            tasksList,
+            Modifier.weight(3f),
+            moreInfo = { moreInfo(it) }
+        )
     }
 }
 
 @Composable
-fun MainToDoList(eventsList: List<Event>, modifier: Modifier, moreInfo: (Int) -> Unit) {
-    val areEvents = eventsList.isNotEmpty()
+fun MainToDoList(
+    taskViewModel: TaskViewModel,
+    tasksList: List<Task>,
+    modifier: Modifier,
+    moreInfo: (Int) -> Unit
+) {
+    val tasks = taskViewModel.tasks.collectAsState().value
+    val areEvents = tasks.isNotEmpty()
 
     LazyColumn(
         modifier = modifier
@@ -87,22 +107,35 @@ fun MainToDoList(eventsList: List<Event>, modifier: Modifier, moreInfo: (Int) ->
         verticalArrangement = if (areEvents) Arrangement.spacedBy(10.dp) else Arrangement.Center
     ) {
         if (areEvents) {
-            itemsIndexed(eventsList) { index, event ->
+            items(tasks) { task ->
                 ToDoItem(
-                    index,
-                    event.title,
-                    event.description,
-                    event.date,
-                    event.location,
-                    event.icon,
-                    event.isCompleted,
-                    { event.isCompleted = !event.isCompleted },
-                    { moreInfo(index) })
+                    task.id,
+                    task.title,
+                    task.description,
+                    LocalDate.parse(task.date),
+                    task.location,
+//                    task.icon,
+                    task.isCompleted,
+                    {
+                        taskViewModel.update(
+                            Task(
+                                task.title,
+                                task.description,
+                                task.date,
+                                task.location,
+                                task.guests,
+                                !task.isCompleted,
+                                task.id
+                            )
+                        )
+                    },
+                    { moreInfo(task.id) })
             }
         } else {
             item {
                 Box(
-                    modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center
+                    modifier = Modifier.fillParentMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "No tasks for now...",

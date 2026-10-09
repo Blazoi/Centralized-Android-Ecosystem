@@ -46,7 +46,7 @@ fun ToDoItem(
     description: String,
     date: LocalDate?,
     location: String,
-    icon: ImageVector,
+//    icon: ImageVector,
     isCompleted: Boolean,
     onCheckedChange: () -> Unit,
     moreInfo: (Int) -> Unit,
@@ -69,7 +69,8 @@ fun ToDoItem(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically) {
         Checkbox(
-            checked = isChecked, onCheckedChange = {
+            checked = isChecked,
+            onCheckedChange = {
                 onCheckedChange()
                 isChecked = !isChecked
             }, colors = CheckboxDefaults.colors(
@@ -137,9 +138,9 @@ fun ToDoItem(
                 .clip(RoundedCornerShape(12.dp))
                 .background(CanvasBackground)
         ) {
-            Icon(
-                imageVector = icon, contentDescription = null, tint = Color(0xFF1B4D3E)
-            )
+//            Icon(
+//                imageVector = icon, contentDescription = null, tint = Color(0xFF1B4D3E)
+//            )
         }
     }
 }

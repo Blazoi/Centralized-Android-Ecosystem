@@ -33,14 +33,13 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.todo.data.TaskViewModel
 import com.example.todo.screens.CreateTask.CreateTaskWidgets.AddButton
 import com.example.todo.screens.CreateTask.CreateTaskWidgets.DateSection
 import com.example.todo.screens.CreateTask.CreateTaskWidgets.DescriptionSection
 import com.example.todo.screens.CreateTask.CreateTaskWidgets.GuestSection
 import com.example.todo.screens.CreateTask.CreateTaskWidgets.LocationSection
 import com.example.todo.screens.CreateTask.CreateTaskWidgets.TitleSection
-import com.example.todo.screens.Event
-import com.example.todo.screens.toDoEvents
 import com.example.todo.ui.theme.RoyalGold
 import com.example.todo.ui.theme.SubtleGrey
 import com.example.todo.ui.theme.SurfaceCard
@@ -52,8 +51,8 @@ import kotlin.collections.plus
 
 @Composable
 fun CreateTask(
+    taskViewModel: TaskViewModel,
     modifier: Modifier = Modifier,
-    createEvent: (Event) -> Unit,
     topBarTitle: (String) -> Unit
 ) {
     topBarTitle("Create a new Task")
@@ -150,6 +149,7 @@ fun CreateTask(
             )
 
             AddButton(
+                taskViewModel,
                 title = title,
                 description = description,
                 date = LocalDate.of(
@@ -159,7 +159,7 @@ fun CreateTask(
                 ),
                 location = location,
                 icon = icon,
-                createEvent = createEvent,
+                guestList,
                 shape = fieldShape,
                 modifier = Modifier
                     .fillMaxWidth(0.9f)

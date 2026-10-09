@@ -4,42 +4,44 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.example.todo.screens.Event
-import com.example.todo.screens.allEvents
-import com.example.todo.screens.toDoEvents
+import com.example.todo.data.Task
+import com.example.todo.data.TaskViewModel
 import com.example.todo.ui.theme.SurfaceCard
 import com.example.todo.ui.theme.VibrantCoral
 import java.time.LocalDate
 
 @Composable
 fun AddButton(
+    taskViewModel: TaskViewModel,
     title: String,
     description: String,
     date: LocalDate,
     location: String,
     icon: ImageVector,
-    createEvent: (Event) -> Unit,
+    guestList: List<String>,
     shape: Shape,
     modifier: Modifier = Modifier
 ) {
+    val tasks = taskViewModel.tasks.collectAsState().value
     Button(
         onClick = {
-            val newEvent =
-                Event(
-                    allEvents.count(),
+            val newTask =
+                Task(
                     title,
                     description,
-                    date,
+                    date.toString(),
                     location,
-                    icon,
+                    //icon,
+                    guestList.toString(),
                     false
                 )
-            createEvent(newEvent)
+            taskViewModel.add(newTask)
         }, colors = ButtonDefaults.buttonColors(
             containerColor = VibrantCoral, contentColor = SurfaceCard
         ), shape = shape, modifier = modifier

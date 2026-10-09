@@ -1,7 +1,9 @@
 package com.example.todo.screens.TaskList
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,6 +23,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.todo.data.Task
+import com.example.todo.data.TaskViewModel
+import com.example.todo.screens.TAG
 import com.example.todo.ui.theme.CanvasBackground
 import com.example.todo.ui.theme.DarkViolet
 import com.example.todo.ui.theme.RoyalGold
@@ -45,11 +52,19 @@ data class StickerColors(
     val bodyBackground: Color,
     val bodyText: Color
 )
+
+public val tasksOfTheWeek = mutableListOf<MutableList<Task>>()
+
 @Composable
-fun QuickAccessCalendar(modifier: Modifier) {
+fun QuickAccessCalendar(
+    taskViewModel: TaskViewModel,
+    changeTasksList: (List<Task>) -> Unit,
+    modifier: Modifier
+) {
     val currentDate = LocalDate.now()
     val weekOf = currentDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-
+    getTheTasksOfTheWeek(taskViewModel.tasks.collectAsState().value)
+    Log.d(TAG, tasksOfTheWeek.toString())
     val colorSchemes = mapOf(
         "past" to StickerColors(
             headerBackground = secondaryDark,
@@ -111,7 +126,11 @@ fun QuickAccessCalendar(modifier: Modifier) {
                 }
 
                 DateSticker(
-                    date = day, colors = stickerColors, modifier = if (isToday) Modifier
+                    date = day,
+                    tasks = tasksOfTheWeek[i],
+                    { changeTasksList(it) },
+                    colors = stickerColors,
+                    modifier = if (isToday) Modifier
                         .border(
                             2.dp, Color.Black, RoundedCornerShape(8.dp)
                         )
@@ -127,10 +146,24 @@ fun QuickAccessCalendar(modifier: Modifier) {
 
 @Composable
 fun DateSticker(
-    date: LocalDate, colors: StickerColors, modifier: Modifier = Modifier
+    date: LocalDate,
+    tasks: MutableList<Task>,
+    changeTasksList: (List<Task>) -> Unit,
+    colors: StickerColors,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.clip(RoundedCornerShape(8.dp)),
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = {
+                changeTasksList(tasks)
+                if (tasks.count() > 0) {
+                    Log.d(TAG, tasks[0].date ?: "")
+                } else {
+                    Log.d(TAG, tasks.toString())
+                    Log.d(TAG, "Nothing here")
+                }
+            }),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
@@ -161,5 +194,15 @@ fun DateSticker(
                 color = colors.bodyText
             )
         }
+    }
+}
+
+fun getTheTasksOfTheWeek(tasks: List<Task>) {
+    for (i in 0..6) {
+        val weekOf = LocalDate.now()
+            .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        val newList =
+            tasks.filter { it.date == weekOf.plusDays(i.toLong()).toString() }.toMutableList()
+        tasksOfTheWeek.add(newList)
     }
 }
